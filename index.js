@@ -3,9 +3,8 @@ const morgan = require('morgan');
 require('dotenv').config();
 const helmet = require('helmet');
 const bodyParser = require('body-parser');
-const investor = require('./routes/api/investor');
-const post = require('./routes/api/post');
-const admin = require('./routes/api/admin');
+const routes = require('./routes/api');
+
 const connectDB = require('./db');
 
 const app = express();
@@ -28,8 +27,6 @@ app.use(morgan('dev'));
 app.use(helmet());
 connectDB();
 
-app.use('/api/v1/post', post);
-app.use('/api/v1/investor', investor);
-app.use('/api/v1/admin', admin);
+app.use('/api/v1', routes);
 
 app.listen(port, () => console.log(`API Server Listening on port ${port}`));

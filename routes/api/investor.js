@@ -1,46 +1,16 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const User = require("../../models/User");
-const Stock = require("../../models/Stock");
-const Advertisement = require("../../models/Advertisement");
-const Comment = require("../../models/Comment");
-const Analysis = require("../../models/Analysis");
-const Purchase = require("../../models/Purchases");
-const Average = require("../../models/Average");
-var ObjectId = require("mongodb").ObjectId;
-const axios = require("axios");
+const User = require('../../models/User');
+const Stock = require('../../models/Stock');
+const Advertisement = require('../../models/Advertisement');
+const Comment = require('../../models/Comment');
+const Analysis = require('../../models/Analysis');
+const Purchase = require('../../models/Purchases');
+const Average = require('../../models/Average');
+var ObjectId = require('mongodb').ObjectId;
+const axios = require('axios');
 
-router.post("/register/user", async (req, res) => {
-  const email = req.body.email;
-  const user = await User.findOne({ email: email });
-
-  if (user) {
-    return res.status(400).send({});
-  } else {
-    const newUser = new User(req.body);
-    newUser.save().catch((err) => console.log(err));
-    return res.status(200).send(newUser);
-  }
-});
-
-// POST http://localhost:4000/api/v1/investor/register/user
-// a user is registering for the first time on UpArrow
-
-router.get("/fetch/user/:email", async (req, res) => {
-  const email = req.params.email;
-  const user = await User.findOne({ email: email });
-
-  if (user) {
-    return res.status(200).send(user);
-  } else {
-    return res.status(200).send({});
-  }
-});
-
-// GET http://localhost:4000/api/v1/investor/fetch/user/:email
-// a user getting a user data using email
-
-router.put("/update/stockString/:id", async (req, res) => {
+router.put('/update/stockString/:id', async (req, res) => {
   const stockId = req.params.id;
   const stockObjectId = ObjectId(stockId);
   const stock = await Stock.findById(stockObjectId);
@@ -72,7 +42,7 @@ router.put("/update/stockString/:id", async (req, res) => {
 // PUT http://localhost:4000/api/v1/investor/update/stockString/:id
 // a user is updating a stock information
 
-router.get("/fetch/stocks", async (req, res) => {
+router.get('/fetch/stocks', async (req, res) => {
   const stocks = await Stock.find();
 
   if (stocks.length == 0) {
@@ -85,7 +55,7 @@ router.get("/fetch/stocks", async (req, res) => {
 // GET http://localhost:4000/api/v1/investor/fetch/stocks
 // getting all stocks available on UpArrow (a user at the landing page where all stocks are)
 
-router.get("/fetch/stock/:stockId", async (req, res) => {
+router.get('/fetch/stock/:stockId', async (req, res) => {
   try {
     const stockId = req.params.stockId;
     const objectId = ObjectId(stockId);
@@ -104,7 +74,7 @@ router.get("/fetch/stock/:stockId", async (req, res) => {
 // GET http://localhost:4000/api/v1/investor/fetch/stock/:stockId
 // a user is clicked a specific stock to view the stock page
 
-router.get("/fetch/analysis/:ticker", async (req, res) => {
+router.get('/fetch/analysis/:ticker', async (req, res) => {
   const ticker = req.params.ticker.toUpperCase();
   const analysisDocument = await Analysis.findOne({ ticker: ticker });
 
@@ -118,7 +88,7 @@ router.get("/fetch/analysis/:ticker", async (req, res) => {
 // GET http://localhost:4000/api/v1/investor/fetch/analysis/:ticker
 // a user is getting the analysis of a stock
 
-router.post("/register/comment", async (req, res) => {
+router.post('/register/comment', async (req, res) => {
   try {
     const newComment = new Comment(req.body);
 
@@ -188,7 +158,7 @@ router.post("/register/comment", async (req, res) => {
 // POST http://localhost:4000/api/v1/investor/register/comment
 // a user is writes a comment
 
-router.put("/update/comment/:commentId", async (req, res) => {
+router.put('/update/comment/:commentId', async (req, res) => {
   try {
     const commentId = req.params.commentId;
     const commentObjectId = ObjectId(commentId);
@@ -217,7 +187,7 @@ router.put("/update/comment/:commentId", async (req, res) => {
 // PUT http://localhost:4000/api/v1/investor/update/comment/:commentId
 // a user is editing/updating a comment
 
-router.delete("/delete/comment/:commentId", async (req, res) => {
+router.delete('/delete/comment/:commentId', async (req, res) => {
   try {
     const commentId = req.params.commentId;
     const commentObjectId = ObjectId(commentId);
@@ -299,7 +269,7 @@ router.delete("/delete/comment/:commentId", async (req, res) => {
 // DELETE http://localhost:4000/api/v1/investor/delete/comment/:commentId
 // a user is deleting a comment
 
-router.put("/update/likes/comment/:commentId/:userId", async (req, res) => {
+router.put('/update/likes/comment/:commentId/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     const userObjectId = ObjectId(userId);
@@ -349,7 +319,7 @@ router.put("/update/likes/comment/:commentId/:userId", async (req, res) => {
 // PUT http://localhost:4000/api/v1/investor/update/likes/comment/:commentId/:userId
 // a user clicked like button on a comment
 
-router.get("/fetch/likes/comment/:commentId", async (req, res) => {
+router.get('/fetch/likes/comment/:commentId', async (req, res) => {
   const commentObjectId = ObjectId(req.params.commentId);
   const comment = await Comment.findById(commentObjectId);
 
@@ -363,62 +333,7 @@ router.get("/fetch/likes/comment/:commentId", async (req, res) => {
 // GET http://localhost:4000/api/v1/investor/fetch/likes/comment/:commentId
 // this API gets all number of likes of a comment
 
-router.get("/fetch/userprofile/:userId", async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const userObjectId = ObjectId(userId);
-    const userDocument = await User.findById(userObjectId);
-
-    if (!userDocument) {
-      return res.status(404).send({});
-    } else {
-      return res.status(200).send(userDocument);
-    }
-  } catch (error) {
-    return res.status(400).send({});
-  }
-});
-
-// GET http://localhost:4000/api/v1/investor/fetch/userprofile/:userId
-// a logged user can see other investor’s profile and comments
-
-router.get("/fetch/all/users", async (req, res) => {
-  const userList = await User.find();
-  return res.status(200).send(userList);
-});
-
-// GET http://localhost:4000/api/v1/investor/fetch/all/users
-// we are getting all users in UpArrow
-
-router.get("/search/user/:email", async (req, res) => {
-  try {
-    const userEmail = req.params.email;
-    const userDocument = await User.findOne({ email: userEmail });
-
-    if (!userDocument) {
-      return res.status(404).send({});
-    } else {
-      return res.status(200).send(userDocument);
-    }
-  } catch (error) {
-    return res.status(400).send({});
-  }
-});
-
-// GET http://localhost:4000/api/v1/investor/search/user/:email
-// a user can see other user's profile and comments using email address
-
-router.get("/fetch/all/user/comments/:userId", async (req, res) => {
-  const userStringId = req.params.userId;
-  const allComments = await Comment.find({ userId: userStringId });
-
-  return res.status(200).send(allComments);
-});
-
-// GET http://localhost:4000/api/v1/investor/fetch/all/user/comments/:userId
-// a user can see other user's comments throughout the history
-
-router.get("/fetch/stock/comments/:stockId", async (req, res) => {
+router.get('/fetch/stock/comments/:stockId', async (req, res) => {
   const stockStringId = req.params.stockId;
   const allComments = await Comment.find({ stockId: stockStringId });
 
@@ -428,62 +343,7 @@ router.get("/fetch/stock/comments/:stockId", async (req, res) => {
 // GET http://localhost:4000/api/v1/investor/fetch/stock/comments/:stockId
 // a user is getting all comments on a given stock
 
-router.get("/fetch/userprofiles", async (req, res) => {
-  const users = await User.find();
-
-  if (users.length == 0) {
-    return res.status(404).send({});
-  } else {
-    return res.status(200).send(users);
-  }
-});
-
-// GET http://localhost:4000/api/v1/investor/fetch/userprofiles/
-// a user can get all investors
-
-router.put("/update/userprofile/:userId", async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const userObjectId = ObjectId(userId);
-    const userDocument = await User.findById(userObjectId);
-
-    if (!userDocument) {
-      return res.status(404).send({});
-    } else {
-      const userQuery = { _id: userObjectId };
-      const updatedUserValue = {
-        name: req.body.name,
-        profile_image_url: req.body.profile_image_url,
-        username: req.body.username,
-        password: req.body.password,
-        email: req.body.email,
-        description: req.body.description,
-        websiteUrl: req.body.websiteUrl,
-        comments: req.body.comments,
-        likes: req.body.likes,
-        isAdmin: req.body.isAdmin,
-        stockPreference: req.body.stockPreference,
-        investedCompanies: req.body.investedCompanies,
-        posts: req.body.posts,
-        purchases: req.body.purchases,
-        totalInvestment: req.body.totalInvestment,
-        totalProfits: req.body.totalProfits,
-        totalAssets: req.body.totalAssets,
-        followers: req.body.followers,
-        followings: req.body.followings,
-      };
-      await User.findOneAndUpdate(userQuery, updatedUserValue);
-      return res.status(200).send(updatedUserValue);
-    }
-  } catch (error) {
-    return res.status(400).send({});
-  }
-});
-
-// PUT http://localhost:4000/api/v1/investor/update/userprofile/:userId
-// a user is updating his/her user profile
-
-router.delete("/delete/userprofile/:userId", async (req, res) => {
+router.delete('/delete/userprofile/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     const userObjectId = ObjectId(userId);
@@ -540,7 +400,7 @@ router.delete("/delete/userprofile/:userId", async (req, res) => {
 // DELETE http://localhost:4000/api/v1/investor/delete/userprofile/:userId
 // a user is deleting his/her user profile
 
-router.put("/update/invest/company/:stockId/:userId", async (req, res) => {
+router.put('/update/invest/company/:stockId/:userId', async (req, res) => {
   try {
     const stockId = req.params.stockId;
     const stockObjectId = ObjectId(stockId);
@@ -621,7 +481,7 @@ router.put("/update/invest/company/:stockId/:userId", async (req, res) => {
 // a user clicked "Buy" button on a stock page
 // we are not using this
 
-router.put("/update/notInvest/company/:stockId/:userId", async (req, res) => {
+router.put('/update/notInvest/company/:stockId/:userId', async (req, res) => {
   try {
     const stockId = req.params.stockId;
     const stockObjectId = ObjectId(stockId);
@@ -701,7 +561,7 @@ router.put("/update/notInvest/company/:stockId/:userId", async (req, res) => {
 // PUT http://localhost:4000/api/v1/investor/update/notInvest/company/:stockId/:userId
 // a user clicked "Sell" button on a stock page
 
-router.post("/purchase", async (req, res) => {
+router.post('/purchase', async (req, res) => {
   try {
     const userId = req.body.userId;
     const userObjectId = ObjectId(userId);
@@ -823,25 +683,25 @@ router.post("/purchase", async (req, res) => {
 // post a new stock purchase of a user (buy)
 // super important api for UpArrow
 
-router.put("/sell", async (req, res) => {
-  console.log("sell is working");
+router.put('/sell', async (req, res) => {
+  console.log('sell is working');
   try {
     const userId = req.body.userId;
     const userObjectId = ObjectId(userId);
     const userDocument = await User.findById(userObjectId);
 
-    console.log("this is stockId", req.body.stockId);
+    console.log('this is stockId', req.body.stockId);
     let purchaseDocument = await Purchase.findOne({
       stockId: req.body.stockId,
       userId: userId,
     });
 
-    console.log("sell userDocument", userDocument);
+    console.log('sell userDocument', userDocument);
     if (!userDocument) {
       return res.status(404).send({});
     }
 
-    console.log("purchaseDocument", purchaseDocument);
+    console.log('purchaseDocument', purchaseDocument);
     if (purchaseDocument) {
       if (purchaseDocument.quantity < req.body.quantity) {
         return res.status(400).send({});
@@ -855,7 +715,7 @@ router.put("/sell", async (req, res) => {
 
       let newAveragePrice = (await Average.find({}))[0].averages;
       console.log(
-        "newAveragePrice/////////////////////////////////////////////////////////////////////////////",
+        'newAveragePrice/////////////////////////////////////////////////////////////////////////////',
         newAveragePrice
       );
       let stockDocument = await Stock.findById(req.body.stockId);
@@ -863,11 +723,11 @@ router.put("/sell", async (req, res) => {
       let stockPrice = 0;
       for (let i = 0; i < newAveragePrice.length; i++) {
         console.log(
-          "ticker ///////////////////////////////////////////////",
+          'ticker ///////////////////////////////////////////////',
           ticker
         );
         const key = Object.keys(newAveragePrice[i])[0];
-        console.log("key ///////////////////////////////////////////////", key);
+        console.log('key ///////////////////////////////////////////////', key);
         if (key === ticker) {
           stockPrice = newAveragePrice[i][key]; //300
         }
@@ -885,7 +745,7 @@ router.put("/sell", async (req, res) => {
           (purchaseDocument.quantity + req.body.quantity),
       };
       console.log(
-        "updatedPurchaseDocument ////////////////////////////////////////////////////////////////////",
+        'updatedPurchaseDocument ////////////////////////////////////////////////////////////////////',
         updatedPurchaseDocument
       );
       await Purchase.findOneAndUpdate(purchaseQuery, updatedPurchaseDocument);
@@ -932,14 +792,14 @@ router.put("/sell", async (req, res) => {
 
 // update userDocument.totalInvestment
 
-router.get("/fetch/stocks/purchase/:userId", async (req, res) => {
+router.get('/fetch/stocks/purchase/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     const userObjectId = ObjectId(userId);
     const user = await User.findById(userObjectId);
     const purchases = user.purchases;
     var purchaseList = [];
-    var tickerStr = "";
+    var tickerStr = '';
 
     if (user) {
       for (var i = 0; i < purchases.length; i++) {
@@ -957,7 +817,7 @@ router.get("/fetch/stocks/purchase/:userId", async (req, res) => {
         if (i == purchases.length - 1) {
           tickerStr = tickerStr + stockDocument.ticker;
         } else {
-          tickerStr = tickerStr + stockDocument.ticker + ",";
+          tickerStr = tickerStr + stockDocument.ticker + ',';
         }
         purchaseList.push(purchaseJSON);
       }
@@ -968,7 +828,7 @@ router.get("/fetch/stocks/purchase/:userId", async (req, res) => {
 
       var finalPurchaseList = [];
       var purchase = null;
-      var purchaseTicker = "";
+      var purchaseTicker = '';
       var currentPrice = 0;
       if (purchaseList.length == 1) {
         purchase = purchaseList[0];
@@ -1001,7 +861,141 @@ router.get("/fetch/stocks/purchase/:userId", async (req, res) => {
 // GET http://localhost:4000/api/v1/investor/fetch/stocks/purchase/:userId
 // Getting all purchases of a user and see if he made/lost money
 
-router.put("/following/:loggedUserId/:profileUserId", async (req, res) => {
+router.get('/purchases/:profileUserId', async (req, res) => {
+  try {
+    const profileUserId = req.params.profileUserId;
+    const profileUserObjectId = ObjectId(profileUserId);
+    const profileUserDoc = await User.findById(profileUserObjectId);
+
+    if (!profileUserDoc) {
+      return res.status(404).send({});
+    }
+    const purchaseList = profileUserDoc.purchases;
+    var stockList = [];
+
+    for (var i = 0; i < purchaseList.length; i++) {
+      var purchase = await Purchase.findById(purchaseList[i]);
+      var stockId = purchase.stockId;
+      var stockObjectId = ObjectId(stockId);
+      var stockDocument = await Stock.findById(stockObjectId);
+      stockList.push(stockDocument);
+    }
+    return res.status(200).send(stockList);
+  } catch (error) {
+    return res.status(400).send({});
+  }
+});
+
+//GET http://localhost:4000/api/v1/investor/purchases/:profileUserId
+// a user is getting all the stock documents he/she invested
+
+router.get('/fetch/stocks/allpurchases', async (req, res) => {
+  const allPurchases = await Purchase.find();
+  return res.status(200).send(allPurchases);
+});
+
+//GET http://localhost:4000/api/v1/investor/fetch/stocks/purchases
+// a user is getting all purchases in upArrow of all users
+
+router.get('/fetch/purchaes/portfolio/:userId', async (req, res) => {
+  const allPortfolio = await Purchase.find({ userId: req.params.userId });
+  return res.status(200).send(allPortfolio);
+});
+
+//GET http://localhost:4000/api/v1/investor/fetch/purchaes/portfolio/:userId
+
+router.get('/fetch/profit/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const userIdObjectId = ObjectId(userId);
+    const userDocument = await User.findById(userIdObjectId); // purchsedoc.quantity * Average.current - purchase.totalInvested
+
+    const purchaseObjectIdList = userDocument.purchases; // objectId of all purchases
+
+    const averageDocument = (await Average.find())[0]; // the 0th index of Average document
+    const averagePriceList = averageDocument.averages; // the actual list
+
+    let profit = 0;
+    const purchaseList = await Promise.all(
+      // 이 부분도 이해가 잘 안가요
+      purchaseObjectIdList.map((objectId) => {
+        // iterating through purchaseObjectIdList to extract purchase objectId
+        return Purchase.findById(objectId); // returns Purchase document
+      })
+    );
+
+    var profitJSON = {};
+    for await (const purchase of purchaseList) {
+      // 이게 무슨 코드이죠?
+      if (purchase === null) {
+        continue;
+      }
+      const quantity = purchase.quantity;
+      const totalInvested = purchase.totalInvested;
+      const stockId = purchase.stockId;
+      const stockObjectId = ObjectId(stockId);
+      const stockDocument = await Stock.findById(stockObjectId);
+      const ticker = stockDocument.ticker;
+      const price = averagePriceList.find((averageJSON) => {
+        // 이 부분 잘 이해 안가요
+        return averageJSON[ticker];
+      })[ticker];
+      profit = quantity * price - totalInvested + profit;
+    }
+    profitJSON.profit = profit;
+    return res.status(200).send(profitJSON);
+  } catch (error) {
+    return res.status(400).send({});
+  }
+});
+
+router.get('/fetch/all/user/comments/:userId', async (req, res) => {
+  const userStringId = req.params.userId;
+  const allComments = await Comment.find({ userId: userStringId });
+
+  return res.status(200).send(allComments);
+});
+
+router.put('/update/userprofile/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const userObjectId = ObjectId(userId);
+    const userDocument = await User.findById(userObjectId);
+
+    if (!userDocument) {
+      return res.status(404).send({});
+    } else {
+      const userQuery = { _id: userObjectId };
+      const updatedUserValue = {
+        name: req.body.name,
+        profile_image_url: req.body.profile_image_url,
+        username: req.body.username,
+        password: req.body.password,
+        email: req.body.email,
+        description: req.body.description,
+        websiteUrl: req.body.websiteUrl,
+        comments: req.body.comments,
+        likes: req.body.likes,
+        isAdmin: req.body.isAdmin,
+        stockPreference: req.body.stockPreference,
+        investedCompanies: req.body.investedCompanies,
+        posts: req.body.posts,
+        purchases: req.body.purchases,
+        totalInvestment: req.body.totalInvestment,
+        totalProfits: req.body.totalProfits,
+        totalAssets: req.body.totalAssets,
+        followers: req.body.followers,
+        followings: req.body.followings,
+      };
+      await User.findOneAndUpdate(userQuery, updatedUserValue);
+      return res.status(200).send(updatedUserValue);
+    }
+  } catch (error) {
+    return res.status(400).send({});
+  }
+});
+
+router.put('/following/:loggedUserId/:profileUserId', async (req, res) => {
   try {
     const loggedUserId = req.params.loggedUserId;
     const loggedUserObjectId = ObjectId(loggedUserId);
@@ -1133,7 +1127,7 @@ router.put("/following/:loggedUserId/:profileUserId", async (req, res) => {
 //http://localhost:4000/api/v1/investor/following/:loggedUserId/:profileUserId
 // a logged user is following an investor he/she wants to follow, if he/she follows this investor he/she unfollowing him
 
-router.get("/followers/:profileUserId", async (req, res) => {
+router.get('/followers/:profileUserId', async (req, res) => {
   try {
     const profileUserId = req.params.profileUserId;
     const profileUserObjectId = ObjectId(profileUserId);
@@ -1159,7 +1153,7 @@ router.get("/followers/:profileUserId", async (req, res) => {
 //http://localhost:4000/api/v1/investor/followers/:profileUserId
 // a user wants to see the followers of another user (ex. a hot shot investor like Warren Buffet)
 
-router.get("/followings/:profileUserId", async (req, res) => {
+router.get('/followings/:profileUserId', async (req, res) => {
   try {
     const profileUserId = req.params.profileUserId;
     const profileUserObjectId = ObjectId(profileUserId);
@@ -1184,96 +1178,5 @@ router.get("/followings/:profileUserId", async (req, res) => {
 
 //http://localhost:4000/api/v1/investor/followings/:profileUserId
 // a user wants to see what other users a hot shot user (ex. Warren Buffett) is following
-
-router.get("/purchases/:profileUserId", async (req, res) => {
-  try {
-    const profileUserId = req.params.profileUserId;
-    const profileUserObjectId = ObjectId(profileUserId);
-    const profileUserDoc = await User.findById(profileUserObjectId);
-
-    if (!profileUserDoc) {
-      return res.status(404).send({});
-    }
-    const purchaseList = profileUserDoc.purchases;
-    var stockList = [];
-
-    for (var i = 0; i < purchaseList.length; i++) {
-      var purchase = await Purchase.findById(purchaseList[i]);
-      var stockId = purchase.stockId;
-      var stockObjectId = ObjectId(stockId);
-      var stockDocument = await Stock.findById(stockObjectId);
-      stockList.push(stockDocument);
-    }
-    return res.status(200).send(stockList);
-  } catch (error) {
-    return res.status(400).send({});
-  }
-});
-
-//GET http://localhost:4000/api/v1/investor/purchases/:profileUserId
-// a user is getting all the stock documents he/she invested
-
-router.get("/fetch/stocks/allpurchases", async (req, res) => {
-  const allPurchases = await Purchase.find();
-  return res.status(200).send(allPurchases);
-});
-
-//GET http://localhost:4000/api/v1/investor/fetch/stocks/purchases
-// a user is getting all purchases in upArrow of all users
-
-router.get("/fetch/purchaes/portfolio/:userId", async (req, res) => {
-  const allPortfolio = await Purchase.find({ userId: req.params.userId });
-  return res.status(200).send(allPortfolio);
-});
-
-//GET http://localhost:4000/api/v1/investor/fetch/purchaes/portfolio/:userId
-
-router.get("/fetch/profit/:userId", async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const userIdObjectId = ObjectId(userId);
-    const userDocument = await User.findById(userIdObjectId); // purchsedoc.quantity * Average.current - purchase.totalInvested
-
-    const purchaseObjectIdList = userDocument.purchases; // objectId of all purchases
-
-    const averageDocument = (await Average.find())[0]; // the 0th index of Average document
-    const averagePriceList = averageDocument.averages; // the actual list
-
-    let profit = 0;
-    const purchaseList = await Promise.all(
-      // 이 부분도 이해가 잘 안가요
-      purchaseObjectIdList.map((objectId) => {
-        // iterating through purchaseObjectIdList to extract purchase objectId
-        return Purchase.findById(objectId); // returns Purchase document
-      })
-    );
-
-    var profitJSON = {};
-    for await (const purchase of purchaseList) {
-      // 이게 무슨 코드이죠?
-      if (purchase === null) {
-        continue;
-      }
-      const quantity = purchase.quantity;
-      const totalInvested = purchase.totalInvested;
-      const stockId = purchase.stockId;
-      const stockObjectId = ObjectId(stockId);
-      const stockDocument = await Stock.findById(stockObjectId);
-      const ticker = stockDocument.ticker;
-      const price = averagePriceList.find((averageJSON) => {
-        // 이 부분 잘 이해 안가요
-        return averageJSON[ticker];
-      })[ticker];
-      profit = quantity * price - totalInvested + profit;
-    }
-    profitJSON.profit = profit;
-    return res.status(200).send(profitJSON);
-  } catch (error) {
-    return res.status(400).send({});
-  }
-});
-
-//GET http://localhost:4000/api/v1/investor/fetch/profit/:userId
-// getting the profit of an specific user
 
 module.exports = router;
