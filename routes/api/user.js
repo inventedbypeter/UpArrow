@@ -36,7 +36,7 @@ router.post('/', async (req, res) => {
   if (user) {
     return res.status(400).send({});
   } else {
-    const newUser = new User(req.body);
+    const newUser = new User({ ...req.body, availableCash: 100000 });
     newUser.save().catch((err) => console.log(err));
     return res.status(200).send(newUser);
   }
@@ -44,7 +44,18 @@ router.post('/', async (req, res) => {
 
 // a user getting a user data using email
 
-router.get('/:email', async (req, res) => {
+router.get('/:id', async (req, res) => {
+  const _id = req.params.id;
+  const user = await User.findOne({ _id });
+
+  if (user) {
+    return res.status(200).send(user);
+  } else {
+    return res.status(200).send({});
+  }
+});
+
+router.get('/:email/email', async (req, res) => {
   const email = req.params.email;
   const user = await User.findOne({ email: email });
 
