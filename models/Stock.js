@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const StockSchema = new Schema({
@@ -15,6 +15,7 @@ const StockSchema = new Schema({
   notInvest: Array,
   stockString: String,
   posts: Array,
+  detailInfo: Object,
 });
 
-module.exports = mongoose.model("Stock", StockSchema);
+module.exports = mongoose.model('Stock', StockSchema);
