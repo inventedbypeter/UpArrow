@@ -15,7 +15,7 @@ const StockSchema = new Schema({
   notInvest: Array,
   stockString: String,
   posts: Array,
-  detailInfo: Object,
+  detailInfo: Array,
 });
 
 module.exports = mongoose.model('Stock', StockSchema);
