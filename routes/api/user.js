@@ -6,7 +6,7 @@ const Advertisement = require('../../models/Advertisement');
 const Comment = require('../../models/Comment');
 const Analysis = require('../../models/Analysis');
 const Purchase = require('../../models/Purchases');
-const Average = require('../../models/Average');
+const Average = require('../../models/Config');
 var ObjectId = require('mongodb').ObjectId;
 const axios = require('axios');
 

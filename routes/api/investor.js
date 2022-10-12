@@ -6,7 +6,7 @@ const Advertisement = require('../../models/Advertisement');
 const Comment = require('../../models/Comment');
 const Analysis = require('../../models/Analysis');
 const Purchase = require('../../models/Purchases');
-const Average = require('../../models/Average');
+const Average = require('../../models/Config');
 var ObjectId = require('mongodb').ObjectId;
 const axios = require('axios');
 
@@ -87,76 +87,6 @@ router.get('/fetch/analysis/:ticker', async (req, res) => {
 
 // GET http://localhost:4000/api/v1/investor/fetch/analysis/:ticker
 // a user is getting the analysis of a stock
-
-router.post('/register/comment', async (req, res) => {
-  try {
-    const newComment = new Comment(req.body);
-
-    const stockId = req.body.stockId;
-    const stockObjectId = ObjectId(stockId);
-    const stockDocument = await Stock.findById(stockObjectId);
-    const stockCommentList = stockDocument.comments;
-
-    stockCommentList.push(newComment._id);
-
-    const stockQuery = { _id: stockObjectId };
-    const updatedStockValue = {
-      name: stockDocument.name,
-      ticker: stockDocument.ticker,
-      profile_image_url: stockDocument.profile_image_url,
-      pros: stockDocument.pros,
-      cons: stockDocument.cons,
-      industryCategory: stockDocument.industryCategory,
-      comments: stockCommentList,
-      video_url: stockDocument.video_url,
-      advertisementId: stockDocument.advertisementId,
-      invest: stockDocument.invest,
-      notInvest: stockDocument.notInvest,
-      stockString: stockDocument.stockString,
-      posts: stockDocument.posts,
-    };
-    await Stock.findOneAndUpdate(stockQuery, updatedStockValue);
-
-    const userId = req.body.userId;
-    const userObjectId = ObjectId(userId);
-    const userDocument = await User.findById(userObjectId);
-    const userCommentList = userDocument.comments;
-
-    userCommentList.push(newComment._id);
-
-    const userQuery = { _id: userObjectId };
-    const updatedUserValue = {
-      name: userDocument.name,
-      profile_image_url: userDocument.profile_image_url,
-      username: userDocument.username,
-      password: userDocument.password,
-      email: userDocument.email,
-      description: userDocument.description,
-      websiteUrl: userDocument.websiteUrl,
-      comments: userCommentList,
-      likes: userDocument.likes,
-      isAdmin: userDocument.isAdmin,
-      stockPreference: userDocument.stockPreference,
-      investedCompanies: userDocument.investedCompanies,
-      posts: userDocument.posts,
-      purchases: userDocument.purchases,
-      totalInvestment: userDocument.totalInvestment,
-      totalProfits: userDocument.totalProfits,
-      totalAssets: userDocument.totalAssets,
-      followers: userDocument.followers,
-      followings: userDocument.followings,
-    };
-    await User.findOneAndUpdate(userQuery, updatedUserValue);
-
-    newComment.save().catch((err) => console.log(err));
-    return res.status(200).send(newComment);
-  } catch (error) {
-    return res.status(400).send({});
-  }
-});
-
-// POST http://localhost:4000/api/v1/investor/register/comment
-// a user is writes a comment
 
 router.put('/update/comment/:commentId', async (req, res) => {
   try {
@@ -332,16 +262,6 @@ router.get('/fetch/likes/comment/:commentId', async (req, res) => {
 
 // GET http://localhost:4000/api/v1/investor/fetch/likes/comment/:commentId
 // this API gets all number of likes of a comment
-
-router.get('/fetch/stock/comments/:stockId', async (req, res) => {
-  const stockStringId = req.params.stockId;
-  const allComments = await Comment.find({ stockId: stockStringId });
-
-  return res.status(200).send(allComments);
-});
-
-// GET http://localhost:4000/api/v1/investor/fetch/stock/comments/:stockId
-// a user is getting all comments on a given stock
 
 router.delete('/delete/userprofile/:userId', async (req, res) => {
   try {
