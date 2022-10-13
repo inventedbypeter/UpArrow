@@ -5,7 +5,7 @@ const Stock = require('../../models/Stock');
 const Advertisement = require('../../models/Advertisement');
 const Comment = require('../../models/Comment');
 const Analysis = require('../../models/Analysis');
-const Purchase = require('../../models/Purchases');
+const Purchase = require('../../models/Purchase');
 const Average = require('../../models/Config');
 var ObjectId = require('mongodb').ObjectId;
 const axios = require('axios');
@@ -490,7 +490,9 @@ router.post('/purchase', async (req, res) => {
     if (userDocument) {
       // make change here
       if (userDocument.availableCash < req.body.totalInvested) {
-        return res.status(400).send({});
+        return res
+          .status(400)
+          .send('totalInvested is lower than availableCash');
       }
       const purchases = userDocument.purchases;
       var isDuplicate = false;
@@ -556,7 +558,7 @@ router.post('/purchase', async (req, res) => {
         );
 
         if (!validStockDocument) {
-          return res.status(404).send({});
+          return res.status(404).send('validStockDocument none');
         }
 
         const newPurchase = new Purchase(req.body);
@@ -595,13 +597,10 @@ router.post('/purchase', async (req, res) => {
       return res.status(404).send({});
     }
   } catch (error) {
-    return res.status(400).send({});
+    console.log('error : ', error);
+    return res.status(400).send('Something wrong...');
   }
 });
-
-// POST http://localhost:4000/api/v1/investor/purchase
-// post a new stock purchase of a user (buy)
-// super important api for UpArrow
 
 router.put('/sell', async (req, res) => {
   console.log('sell is working');
