@@ -5,7 +5,7 @@ const PurchasesSchema = new Schema({
   userId: String,
   stockId: String,
   quantity: Number,
-  price: Number,
+  averagePrice: Number,
 });
 
 module.exports = mongoose.model('Purchases', PurchasesSchema);

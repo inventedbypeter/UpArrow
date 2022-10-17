@@ -42,38 +42,6 @@ router.put('/update/stockString/:id', async (req, res) => {
 // PUT http://localhost:4000/api/v1/investor/update/stockString/:id
 // a user is updating a stock information
 
-router.get('/fetch/stocks', async (req, res) => {
-  const stocks = await Stock.find();
-
-  if (stocks.length == 0) {
-    return res.status(404).send({});
-  } else {
-    return res.status(200).send(stocks);
-  }
-});
-
-// GET http://localhost:4000/api/v1/investor/fetch/stocks
-// getting all stocks available on UpArrow (a user at the landing page where all stocks are)
-
-router.get('/fetch/stock/:stockId', async (req, res) => {
-  try {
-    const stockId = req.params.stockId;
-    const objectId = ObjectId(stockId);
-    const stock = await Stock.findById(objectId);
-
-    if (!stock) {
-      return res.status(404).send({});
-    } else {
-      return res.status(200).send(stock);
-    }
-  } catch (error) {
-    return res.status(400).send({});
-  }
-});
-
-// GET http://localhost:4000/api/v1/investor/fetch/stock/:stockId
-// a user is clicked a specific stock to view the stock page
-
 router.get('/fetch/analysis/:ticker', async (req, res) => {
   const ticker = req.params.ticker.toUpperCase();
   const analysisDocument = await Analysis.findOne({ ticker: ticker });
@@ -486,45 +454,53 @@ router.post('/purchase', async (req, res) => {
     const userId = req.body.userId;
     const userObjectId = ObjectId(userId);
     const userDocument = await User.findById(userObjectId);
+    console.log('userdocument : ', userDocument);
 
     if (userDocument) {
       // make change here
-      if (userDocument.availableCash < req.body.totalInvested) {
+      if (userDocument.availableCash < req.body.price * req.body.quantity) {
         return res
           .status(400)
           .send('totalInvested is lower than availableCash');
       }
       const purchases = userDocument.purchases;
-      var isDuplicate = false;
-      for (var i = 0; i < purchases.length; i++) {
-        var purchaseObjectId = purchases[i];
-        var purchaseDocument = await Purchase.findById(purchaseObjectId);
+      let isDuplicate = false;
+      console.log('purchases : ', purchases);
+      for (let i = 0; i < purchases.length; i++) {
+        const purchaseObjectId = purchases[i];
+        const purchaseDocument = await Purchase.findById(purchaseObjectId);
         if (purchaseDocument.stockId == req.body.stockId) {
           isDuplicate = true;
         }
       }
       if (isDuplicate) {
-        var purchaseQuery = { stockId: req.body.stockId };
-        var purchaseDocument = await Purchase.findOne({
+        const purchaseQuery = { stockId: req.body.stockId };
+        const purchaseDocument = await Purchase.findOne({
           stockId: req.body.stockId,
           userId: userId,
         });
         if (purchaseDocument) {
-          var updatedQuantity = purchaseDocument.quantity + req.body.quantity;
-          var updatedTotalInvested =
-            req.body.quantity * req.body.averagePrice +
-            purchaseDocument.totalInvested;
-          var updatedPurchaseValue = {
+          const updatedQuantity = purchaseDocument.quantity + req.body.quantity;
+          const originQuantity = purchaseDocument.quantity;
+          const originAveragePrice = purchaseDocument.averagePrice;
+          const newQuantity = req.body.quantity;
+          const newPrice = req.body.price;
+          const newAveragePrice =
+            (originQuantity * originAveragePrice + newQuantity * newPrice) /
+            (originQuantity + newQuantity);
+          console.log('new quantity : ', newQuantity);
+          console.log('new price: ', newPrice);
+
+          const updatedPurchaseValue = {
             userId: purchaseDocument.userId,
             stockId: purchaseDocument.stockId,
             quantity: updatedQuantity, // if the stock that user purchase is the same stock he/she invested, we are updating the quantity
-            averagePrice: req.body.averagePrice,
-            totalInvested: updatedTotalInvested, // if the stock that user purchase is the same stock he/she invested, we are updating the totalInvested
+            averagePrice: newAveragePrice,
           };
           await Purchase.findOneAndUpdate(purchaseQuery, updatedPurchaseValue);
 
-          let updatedAvailableCash =
-            userDocument.availableCash - req.body.totalInvested;
+          const updatedAvailableCash =
+            userDocument.availableCash - newQuantity * newPrice;
 
           const userQuery = { _id: userObjectId };
           const updatedUserValue = {
@@ -553,7 +529,7 @@ router.post('/purchase', async (req, res) => {
         }
       } else {
         // if the stock that user purchase is a brand new stock
-        var validStockDocument = await Stock.findById(
+        const validStockDocument = await Stock.findById(
           ObjectId(req.body.stockId)
         );
 
@@ -561,12 +537,17 @@ router.post('/purchase', async (req, res) => {
           return res.status(404).send('validStockDocument none');
         }
 
-        const newPurchase = new Purchase(req.body);
-        var purchaseList = userDocument.purchases;
+        const newPurchase = new Purchase({
+          userId: req.body.userId,
+          stockId: req.body.stockId,
+          quantity: req.body.quantity,
+          averagePrice: req.body.price,
+        });
+        const purchaseList = userDocument.purchases;
         purchaseList.push(newPurchase._id);
 
         let updatedAvailableCash =
-          userDocument.availableCash - req.body.totalInvested;
+          userDocument.availableCash - req.body.price * req.body.quantity;
 
         const userQuery = { _id: userObjectId };
         const updatedUserValue = {
@@ -589,8 +570,7 @@ router.post('/purchase', async (req, res) => {
           availableCash: updatedAvailableCash,
         };
         await User.findOneAndUpdate(userQuery, updatedUserValue);
-
-        newPurchase.save().catch((err) => console.log(err));
+        await newPurchase.save();
         return res.status(200).send(newPurchase);
       }
     } else {
