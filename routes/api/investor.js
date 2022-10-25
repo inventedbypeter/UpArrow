@@ -9,6 +9,7 @@ const Purchase = require('../../models/Purchase');
 const Average = require('../../models/Config');
 var ObjectId = require('mongodb').ObjectId;
 const axios = require('axios');
+const Config = require('../../models/Config');
 
 router.put('/update/stockString/:id', async (req, res) => {
   const stockId = req.params.id;
@@ -454,7 +455,6 @@ router.post('/purchase', async (req, res) => {
     const userId = req.body.userId;
     const userObjectId = ObjectId(userId);
     const userDocument = await User.findById(userObjectId);
-    console.log('userdocument : ', userDocument);
 
     if (userDocument) {
       // make change here
@@ -482,7 +482,7 @@ router.post('/purchase', async (req, res) => {
         if (purchaseDocument) {
           const updatedQuantity = purchaseDocument.quantity + req.body.quantity;
           const originQuantity = purchaseDocument.quantity;
-          const originAveragePrice = purchaseDocument.averagePrice;
+          const originAveragePrice = purchaseDocument.price;
           const newQuantity = req.body.quantity;
           const newPrice = req.body.price;
           const newAveragePrice =
@@ -589,48 +589,30 @@ router.put('/sell', async (req, res) => {
     const userObjectId = ObjectId(userId);
     const userDocument = await User.findById(userObjectId);
 
-    console.log('this is stockId', req.body.stockId);
+    if (!userDocument) {
+      return res.status(400).send('Wrong stockId or userId');
+    }
+
     let purchaseDocument = await Purchase.findOne({
       stockId: req.body.stockId,
       userId: userId,
     });
 
-    console.log('sell userDocument', userDocument);
-    if (!userDocument) {
-      return res.status(404).send({});
-    }
-
-    console.log('purchaseDocument', purchaseDocument);
     if (purchaseDocument) {
       if (purchaseDocument.quantity < req.body.quantity) {
-        return res.status(400).send({});
+        return res.status(400).send("Can't sell more quantity");
       }
 
-      let updatedQuantity = purchaseDocument.quantity - req.body.quantity;
-      let deltaInvested =
-        (purchaseDocument.totalInvested / purchaseDocument.quantity) *
-        req.body.quantity;
-      let updatedTotalInvested = purchaseDocument.totalInvested - deltaInvested;
+      const updatedQuantity = purchaseDocument.quantity - req.body.quantity;
 
-      let newAveragePrice = (await Average.find({}))[0].averages;
+      let newAveragePrice = (await Config.find())[0].prices;
       console.log(
         'newAveragePrice/////////////////////////////////////////////////////////////////////////////',
         newAveragePrice
       );
-      let stockDocument = await Stock.findById(req.body.stockId);
-      let ticker = stockDocument.ticker;
-      let stockPrice = 0;
-      for (let i = 0; i < newAveragePrice.length; i++) {
-        console.log(
-          'ticker ///////////////////////////////////////////////',
-          ticker
-        );
-        const key = Object.keys(newAveragePrice[i])[0];
-        console.log('key ///////////////////////////////////////////////', key);
-        if (key === ticker) {
-          stockPrice = newAveragePrice[i][key]; //300
-        }
-      }
+      const stockDocument = await Stock.findById(req.body.stockId);
+      const ticker = stockDocument.ticker;
+      const stockPrice = newAveragePrice[ticker];
 
       /////////////////////////////////////////////////////////////////////////////////////////////////////
       let purchaseQuery = { _id: purchaseDocument._id };
@@ -638,7 +620,7 @@ router.put('/sell', async (req, res) => {
         userId: purchaseDocument.userId,
         stockId: purchaseDocument.stockId,
         quantity: updatedQuantity,
-        averagePrice:
+        price:
           (purchaseDocument.quantity * purchaseDocument.averagePrice +
             req.body.quantity * stockPrice) /
           (purchaseDocument.quantity + req.body.quantity),
@@ -650,7 +632,7 @@ router.put('/sell', async (req, res) => {
       await Purchase.findOneAndUpdate(purchaseQuery, updatedPurchaseDocument);
 
       let updatedAvailableCash =
-        userDocument.availableCash + req.body.quantity * req.body.averagePrice;
+        userDocument.availableCash + req.body.quantity * req.body.price;
       const userQuery = { _id: userObjectId };
       let updatedUserDocument = {
         name: userDocument.name,
@@ -678,7 +660,8 @@ router.put('/sell', async (req, res) => {
       return res.status(404).send({});
     }
   } catch (error) {
-    return res.status(400).send({});
+    console.error('error : ', error);
+    return res.status(400).send({ error });
   }
 });
 

@@ -29,4 +29,19 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.get('/:ticker/ticker', async (req, res) => {
+  try {
+    const ticker = req.params.ticker;
+    const stock = await Stock.findOne({ ticker });
+
+    if (!stock) {
+      return res.status(404).send({});
+    } else {
+      return res.status(200).send(stock);
+    }
+  } catch (error) {
+    return res.status(400).send({});
+  }
+});
+
 module.exports = router;
