@@ -9,6 +9,7 @@ const comment = require('./comment');
 const config = require('./config');
 const purchase = require('./purchase');
 const stock = require('./stock');
+const vote = require('./vote');
 
 router.use('/post', post);
 router.use('/investor', investor);
@@ -18,5 +19,6 @@ router.use('/comment', comment);
 router.use('/config', config);
 router.use('/purchase', purchase);
 router.use('/stock', stock);
+router.use('/vote', vote);
 
 module.exports = router;

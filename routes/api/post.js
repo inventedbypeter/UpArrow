@@ -4,6 +4,7 @@ const User = require('../../models/User');
 const Stock = require('../../models/Stock');
 const Post = require('../../models/Post');
 const { validUser } = require('../../middlewares/auth');
+const services = require('../../services');
 var ObjectId = require('mongodb').ObjectId;
 
 router.get('/', async (req, res) => {
@@ -34,16 +35,46 @@ router.post('/', validUser, async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const postId = req.params.id;
     const postObjectId = ObjectId(postId);
     const post = await Post.findById(postObjectId);
 
     if (!post) {
+      return res.status(404).json({ error: 'id에 해당하는 글이 없습니다.' });
+    } else {
+      const postQuery = { _id: postObjectId };
+      const updatedPostValue = {
+        ...req.body,
+      };
+      await Post.findOneAndUpdate(postQuery, updatedPostValue);
+      return res.status(200).send(updatedPostValue);
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: error });
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const postObjectId = ObjectId(postId);
+    const post = await Post.findById(postObjectId);
+
+    const { agreeCount, disagreeCount } =
+      await services.voteServices.findVotesByPostId(postId);
+
+    if (!post) {
       return res.status(404).send({});
     } else {
-      return res.status(200).send(post);
+      const resData = {
+        ...post._doc,
+        agreeCount,
+        disagreeCount,
+      };
+      return res.status(200).json(resData);
     }
   } catch (error) {
     console.log(error);
@@ -95,38 +126,6 @@ router.get('/fetch/all/stock/:stockId', async (req, res) => {
 
 // GET http://localhost:4000/api/v1/post/fetch/all/stock/:stockId
 // Getting all the post for about a stock
-
-router.put('/single/update/:postId', async (req, res) => {
-  try {
-    const postId = req.params.postId;
-    const postObjectId = ObjectId(postId);
-    const post = await Post.findById(postObjectId);
-
-    if (!post) {
-      return res.status(404).send({});
-    } else {
-      const postQuery = { _id: postObjectId };
-      const updatedPostValue = {
-        stockId: req.body.stockId,
-        userId: req.body.userId,
-        userName: req.body.userName,
-        title: req.body.title,
-        content: req.body.content,
-        date: req.body.date,
-        likes: req.body.likes,
-        numberLikes: req.body.numberLikes,
-        comments: req.body.comments,
-        video_url: req.body.video_url,
-        image_url: req.body.image_url,
-      };
-      await Post.findOneAndUpdate(postQuery, updatedPostValue);
-      return res.status(200).send(updatedPostValue);
-    }
-  } catch (error) {
-    console.log(error);
-    return res.status(400).send({});
-  }
-});
 
 // PUT http://localhost:4000/api/v1/post/single/update/:postId
 // A user is updating a Post
