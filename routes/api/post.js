@@ -9,7 +9,11 @@ var ObjectId = require('mongodb').ObjectId;
 
 router.get('/', async (req, res) => {
   try {
-    const posts = await Post.find();
+    const { order, limit } = req.query;
+
+    const posts = await Post.find()
+      .sort(order === 'desc' ? '-date' : '')
+      .limit(limit);
     return res.status(200).json(posts);
   } catch (error) {
     return res.status(500).json({ errorMessage: 'post get error, ', error });
@@ -63,19 +67,7 @@ router.get('/:id', async (req, res) => {
     const postObjectId = ObjectId(postId);
     const post = await Post.findById(postObjectId);
 
-    const { agreeCount, disagreeCount } =
-      await services.voteServices.findVotesByPostId(postId);
-
-    if (!post) {
-      return res.status(404).send({});
-    } else {
-      const resData = {
-        ...post._doc,
-        agreeCount,
-        disagreeCount,
-      };
-      return res.status(200).json(resData);
-    }
+    return res.status(200).json(post);
   } catch (error) {
     console.log(error);
     return res.status(400).send({});
