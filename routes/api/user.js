@@ -9,6 +9,7 @@ const Purchase = require('../../models/Purchase');
 const Average = require('../../models/Config');
 var ObjectId = require('mongodb').ObjectId;
 const axios = require('axios');
+const Config = require('../../models/Config');
 
 // POST http://localhost:4000/api/v1/investor/register/user
 // a user is registering for the first time on UpArrow
@@ -81,6 +82,53 @@ router.get('/:userId/profile', async (req, res) => {
     }
   } catch (error) {
     return res.status(400).send({});
+  }
+});
+
+router.get('/:userId/profit-percentage', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const userObjectId = ObjectId(userId);
+    const userDocument = await User.findById(userObjectId);
+
+    const purchaseList = await Promise.all(
+      userDocument.purchases.map((purchaseId) => {
+        return Purchase.findById(purchaseId);
+      })
+    );
+    const purchase2List = await Promise.all(
+      purchaseList.map((purchase) => Stock.findById(purchase.stockId))
+    );
+    const finalPurchaseList = purchaseList.map((purchase, index) => {
+      return {
+        _id: purchase._id,
+        userId: purchase.userId,
+        stockId: purchase.stockId,
+        quantity: purchase.quantity,
+        averagePrice: purchase.averagePrice,
+        stock: purchase2List[index],
+      };
+    });
+
+    const currentPrices = (await Config.find())[0].prices;
+
+    const profitPercentageList = finalPurchaseList.map((purchase) => {
+      const quantity = purchase.quantity;
+      const currentAmount = currentPrices[purchase.stock.ticker] * quantity;
+      const boughtAmount = purchase.averagePrice * quantity;
+      const profitAmount = boughtAmount - currentAmount;
+      const profitPercentage = (profitAmount + currentAmount) / currentAmount;
+      return {
+        stockName: purchase.stock.name,
+        ticker: purchase.stock.ticker,
+        percent: Math.floor(profitPercentage * 10000) / 100,
+      };
+    });
+
+    return res.status(200).send(profitPercentageList);
+  } catch (error) {
+    console.log('error: ', error);
+    return res.status(400).send({ error: JSON.stringify(error) });
   }
 });
 

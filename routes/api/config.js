@@ -8,13 +8,12 @@ router.get('/', async (req, res) => {
 });
 
 router.put('/', async (req, res) => {
-  const data = req.body.data;
+  const { prices, bannerImageUrl } = req.body;
   const originConfig = await Config.find();
   const config = await Config.updateOne(
     { _id: originConfig[0]._id },
-    { prices: data }
+    { prices, bannerImageUrl }
   );
-  console.log('update success');
   return res.status(200).send('update success');
 });
 
