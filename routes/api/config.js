@@ -8,11 +8,17 @@ router.get('/', async (req, res) => {
 });
 
 router.put('/', async (req, res) => {
-  const { prices, bannerImageUrl } = req.body;
+  const { prices, board, bannerImageUrl } = req.body;
   const originConfig = await Config.find();
   const config = await Config.updateOne(
     { _id: originConfig[0]._id },
-    { prices, bannerImageUrl }
+    {
+      prices: prices ? prices : originConfig[0].prices,
+      bannerImageUrl: bannerImageUrl
+        ? bannerImageUrl
+        : originConfig[0].bannerImageUrl,
+      board: board ? board : originConfig[0].board,
+    }
   );
   return res.status(200).send('update success');
 });

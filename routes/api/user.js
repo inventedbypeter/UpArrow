@@ -47,12 +47,12 @@ router.post('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   const _id = req.params.id;
-  const user = await User.findOne({ _id });
 
-  if (user) {
+  try {
+    const user = await User.findOne({ _id });
     return res.status(200).send(user);
-  } else {
-    return res.status(200).send({});
+  } catch (error) {
+    return res.status(200).send({ error });
   }
 });
 
