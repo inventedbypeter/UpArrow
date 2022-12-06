@@ -7,7 +7,6 @@ const Vote = require('../../models/Vote');
 router.get('/:postId/post', async (req, res) => {
   const { postId } = req.params;
   const votes = await Vote.find({ postId });
-  console.log('votes : ', votes);
   res.json({ data: votes });
 });
 

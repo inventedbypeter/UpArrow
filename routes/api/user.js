@@ -56,6 +56,25 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.get('/:id/rank', async (req, res) => {
+  try {
+    const _id = req.params.id;
+    const user = await User.find();
+    const sortedUser = user.sort((a, b) => b.totalAssets - a.totalAssets);
+    console.log('id: ', _id);
+    const rank = sortedUser.findIndex((user) => {
+      console.log('user.id : ', user._id);
+      return user._id.toString() === _id;
+    });
+    console.log('rank : ', rank);
+
+    return res.status(200).json({ userId: _id, rank: rank + 1 });
+  } catch (error) {
+    console.error('erro : ', error);
+    return res.status(500).send({ error });
+  }
+});
+
 router.get('/:email/email', async (req, res) => {
   const email = req.params.email;
   const user = await User.findOne({ email: email });

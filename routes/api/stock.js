@@ -13,6 +13,14 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/search', async (req, res) => {
+  const query = req.query.name;
+  const regex = (pattern) => new RegExp(`.*${pattern}.*`, 'i');
+  const stocks = await Stock.find({ name: { $regex: regex(query) } });
+
+  return res.status(200).send(stocks);
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const id = req.params.id;

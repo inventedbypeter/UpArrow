@@ -74,6 +74,19 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.get('/:userId/userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const postUserId = ObjectId(userId);
+    const posts = await Post.find({ userId: postUserId });
+
+    return res.status(200).json(posts);
+  } catch (error) {
+    console.log(error);
+    return res.status(400).send({});
+  }
+});
+
 // GET http://localhost:4000/api/v1/post/fetch/single/:postId
 // A user clicked a post (investment idea) to view it
 
