@@ -2,9 +2,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const PostSchema = new Schema({
-  stockId: String,
+  stockIds: Array,
   userId: String,
   username: String,
+  youtubeCode: String,
   title: String,
   content: String,
   date: String,

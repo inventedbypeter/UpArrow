@@ -4,7 +4,6 @@ const User = require('../../models/User');
 const Stock = require('../../models/Stock');
 const Post = require('../../models/Post');
 const { validUser } = require('../../middlewares/auth');
-const services = require('../../services');
 var ObjectId = require('mongodb').ObjectId;
 
 router.get('/', async (req, res) => {
