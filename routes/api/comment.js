@@ -1,4 +1,5 @@
 const express = require('express');
+const { ObjectId } = require('mongodb');
 const router = express.Router();
 const Comment = require('../../models/Comment');
 const commentService = require('../../services/comment');
@@ -10,32 +11,45 @@ router.get('/:stockId/stock', async (req, res) => {
   return res.status(200).send(allComments);
 });
 
+router.get('/ids', async (req, res) => {
+  const ids = req.query.ids;
+  const idList = ids.split(',');
+  console.log('idList : ', idList);
+  const comments = await Promise.all(
+    idList.map((id) => Comment.findById(ObjectId(id)))
+  );
+  console.log('comments : ', comments);
+
+  return res.status(200).json(comments);
+});
+
 router.post('/', async (req, res) => {
   try {
     const isStockComment = !!req.body.stockId;
     let newComment;
     if (isStockComment) {
-      const { stockId, userId, comment, timeStamp, likes } = req.body;
-      newComment = commentService.addStockComment({
+      const { stockId, userId, content, timeStamp, likes } = req.body;
+      newComment = await commentService.addStockComment({
         stockId,
         userId,
-        comment,
+        content,
         timeStamp,
         likes,
       });
     } else {
-      const { postId, userId, comment, timeStamp, likes } = req.body;
-      newComment = commentService.addPostComment({
+      const { postId, userId, content, timeStamp, likes } = req.body;
+      newComment = await commentService.addPostComment({
         postId,
         userId,
-        comment,
+        content,
         timeStamp,
         likes,
       });
     }
     return res.status(200).send(newComment);
   } catch (error) {
-    return res.status(400).send({ error: error.message });
+    console.error('error : ', error);
+    return res.status(500).send({ error: error.message });
   }
 });
 
